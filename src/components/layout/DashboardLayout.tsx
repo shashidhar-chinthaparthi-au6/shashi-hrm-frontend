@@ -49,43 +49,43 @@ const menuItems: MenuItem[] = [
     title: 'Dashboard',
     path: '/dashboard',
     icon: <DashboardIcon />,
-    roles: ['admin', 'manager', 'employee'],
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE'],
   },
   {
     title: 'Employees',
     path: '/employees',
     icon: <PeopleIcon />,
-    roles: ['admin', 'manager'],
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
   {
     title: 'Attendance',
     path: '/attendance',
     icon: <CalendarIcon />,
-    roles: ['admin', 'manager', 'employee'],
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE'],
   },
   {
     title: 'Leave Management',
     path: '/leave',
     icon: <AssignmentIcon />,
-    roles: ['admin', 'manager', 'employee'],
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE'],
   },
   {
     title: 'Payroll',
     path: '/payroll',
     icon: <PaymentIcon />,
-    roles: ['admin', 'manager'],
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
   {
     title: 'Performance',
     path: '/performance',
     icon: <AssessmentIcon />,
-    roles: ['admin', 'manager', 'employee'],
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE'],
   },
   {
     title: 'Settings',
     path: '/settings',
     icon: <SettingsIcon />,
-    roles: ['admin'],
+    roles: ['SUPER_ADMIN', 'ADMIN'],
   },
 ];
 
@@ -118,7 +118,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   const filteredMenuItems = menuItems.filter((item) =>
-    item.roles.includes(user?.role || 'employee')
+    item.roles.includes(user?.role as UserRole)
   );
 
   return (
@@ -130,12 +130,12 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             aria-label="open drawer"
             onClick={handleDrawerOpen}
             edge="start"
-            sx={{ mr: 2 }}
+            sx={{ mr: 2, ...(open && { display: 'none' }) }}
           >
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Shashi HRM
+            HR Management System
           </Typography>
           <IconButton
             size="large"
@@ -145,15 +145,16 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             onClick={handleMenuOpen}
             color="inherit"
           >
-            <Avatar sx={{ bgcolor: 'secondary.main' }}>
+            <Avatar sx={{ width: 32, height: 32 }}>
               {user?.firstName?.[0]}
+              {user?.lastName?.[0]}
             </Avatar>
           </IconButton>
           <Menu
             id="menu-appbar"
             anchorEl={anchorEl}
             anchorOrigin={{
-              vertical: 'top',
+              vertical: 'bottom',
               horizontal: 'right',
             }}
             keepMounted
@@ -164,7 +165,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             open={Boolean(anchorEl)}
             onClose={handleMenuClose}
           >
-            <MenuItem onClick={handleMenuClose}>
+            <MenuItem onClick={() => navigate('/profile')}>
               <ListItemIcon>
                 <PersonIcon fontSize="small" />
               </ListItemIcon>
@@ -180,8 +181,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </Toolbar>
       </AppBar>
       <Drawer
-        variant="persistent"
-        anchor="left"
+        variant="permanent"
         open={open}
         sx={{
           width: drawerWidth,
@@ -194,15 +194,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       >
         <Toolbar />
         <Box sx={{ overflow: 'auto' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
-            <IconButton onClick={handleDrawerClose}>
-              <ChevronLeftIcon />
-            </IconButton>
-          </Box>
-          <Divider />
           <List>
             {filteredMenuItems.map((item) => (
-              <ListItem key={item.title} disablePadding>
+              <ListItem key={item.path} disablePadding>
                 <ListItemButton onClick={() => navigate(item.path)}>
                   <ListItemIcon>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.title} />
@@ -212,15 +206,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           </List>
         </Box>
       </Drawer>
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
-        }}
-      >
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         {children}
       </Box>

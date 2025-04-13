@@ -7,6 +7,7 @@ import RegisterForm from './components/auth/RegisterForm';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Dashboard from './pages/Dashboard';
+import Employees from './pages/Employees';
 import ToastNotification from './components/common/ToastNotification';
 
 // Create a theme instance
@@ -33,7 +34,7 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'manager', 'employee']}>
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE']}>
                   <DashboardLayout>
                     <Dashboard />
                   </DashboardLayout>
@@ -41,17 +42,26 @@ function App() {
               }
             />
             <Route
+              path="/employees"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER']}>
+                  <DashboardLayout>
+                    <Employees />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
                   <DashboardLayout>
                     <div>Admin Panel</div>
                   </DashboardLayout>
                 </ProtectedRoute>
               }
             />
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Router>
       </ThemeProvider>

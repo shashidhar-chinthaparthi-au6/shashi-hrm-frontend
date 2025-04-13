@@ -12,9 +12,9 @@ const Dashboard = () => {
         Welcome, {user?.firstName}!
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        {user?.role === 'admin'
+        {user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN'
           ? 'You have full access to manage the HR system.'
-          : user?.role === 'manager'
+          : user?.role === 'HR_MANAGER' || user?.role === 'DEPARTMENT_MANAGER'
           ? 'You can manage your team and view reports.'
           : 'You can view your information and submit requests.'}
       </Typography>
@@ -34,9 +34,9 @@ const Dashboard = () => {
         <DashboardCard
           title="Quick Actions"
           content={
-            user?.role === 'admin'
+            user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN'
               ? 'Manage employees, view reports, and configure system settings.'
-              : user?.role === 'manager'
+              : user?.role === 'HR_MANAGER' || user?.role === 'DEPARTMENT_MANAGER'
               ? 'View team attendance, approve leave requests, and manage performance.'
               : 'View your attendance, submit leave requests, and check your performance.'
           }
@@ -45,9 +45,9 @@ const Dashboard = () => {
         <DashboardCard
           title="Recent Updates"
           content={
-            user?.role === 'admin'
+            user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN'
               ? 'System updates and maintenance notifications.'
-              : user?.role === 'manager'
+              : user?.role === 'HR_MANAGER' || user?.role === 'DEPARTMENT_MANAGER'
               ? 'Team updates and pending approvals.'
               : 'Your recent activities and pending requests.'
           }
