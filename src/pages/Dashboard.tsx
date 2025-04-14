@@ -1,10 +1,11 @@
 import { Box, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { AuthState } from '../store/slices/authSlice';
 import DashboardCard from '../components/common/DashboardCard';
 
 const Dashboard = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth as AuthState);
 
   return (
     <Box>

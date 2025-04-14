@@ -10,7 +10,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import FormInput from '../common/FormInput';
-import { login } from '../../store/authSlice';
+import { login } from '../../store/slices/authSlice';
 import { AppDispatch } from '../../store';
 
 const LoginForm = () => {

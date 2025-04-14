@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
-import { getCurrentUser } from '../../store/authSlice';
+import { getCurrentUser } from '../../store/slices/authSlice';
 import { RootState, AppDispatch } from '../../store';
+import { AuthState } from '../../store/slices/authSlice';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,7 +12,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   const { isAuthenticated, user, isLoading } = useSelector(
-    (state: RootState) => state.auth
+    (state: RootState) => state.auth as AuthState
   );
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();

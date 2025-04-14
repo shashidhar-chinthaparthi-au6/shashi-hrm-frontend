@@ -8,6 +8,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
+import Attendance from './pages/Attendance';
 import ToastNotification from './components/common/ToastNotification';
 
 // Create a theme instance
@@ -47,6 +48,16 @@ function App() {
                 <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER']}>
                   <DashboardLayout>
                     <Employees />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/attendance"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE']}>
+                  <DashboardLayout>
+                    <Attendance />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

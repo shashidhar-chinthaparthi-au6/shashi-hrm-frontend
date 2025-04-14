@@ -31,9 +31,10 @@ import {
   CalendarToday as CalendarIcon,
   Payment as PaymentIcon,
 } from '@mui/icons-material';
-import { logout } from '../../store/authSlice';
+import { logout } from '../../store/slices/authSlice';
 import { RootState } from '../../store';
 import { UserRole } from '../../types/auth';
+import { AuthState } from '../../store/slices/authSlice';
 
 const drawerWidth = 240;
 
@@ -94,7 +95,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth as AuthState);
 
   const handleDrawerOpen = () => {
     setOpen(true);

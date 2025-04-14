@@ -8,9 +8,10 @@ import {
   Paper,
   Alert,
   MenuItem,
+  CircularProgress,
 } from '@mui/material';
 import FormInput from '../common/FormInput';
-import { register } from '../../store/authSlice';
+import { register } from '../../store/slices/authSlice';
 import { AppDispatch } from '../../store';
 import { UserRole } from '../../types/auth';
 
