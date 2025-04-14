@@ -10,6 +10,8 @@ import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
 import Attendance from './pages/Attendance';
 import ToastNotification from './components/common/ToastNotification';
+import LeaveManagement from './pages/LeaveManagement';
+import Unauthorized from './pages/Unauthorized';
 
 // Create a theme instance
 const theme = createTheme({
@@ -72,6 +74,17 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/leave"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'EMPLOYEE']}>
+                  <DashboardLayout>
+                    <LeaveManagement />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Router>

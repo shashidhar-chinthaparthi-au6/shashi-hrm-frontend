@@ -68,7 +68,7 @@ const menuItems: MenuItem[] = [
     title: 'Leave Management',
     path: '/leave',
     icon: <AssignmentIcon />,
-    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE'],
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'EMPLOYEE'],
   },
   {
     title: 'Payroll',
