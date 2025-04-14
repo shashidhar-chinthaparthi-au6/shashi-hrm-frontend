@@ -3,6 +3,14 @@ import {
   Box,
   Paper,
   Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Alert,
+  CircularProgress,
   Button,
   Dialog,
   DialogTitle,
@@ -11,53 +19,71 @@ import {
   TextField,
   Switch,
   FormControlLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  CircularProgress,
-  Alert,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { leaveService, LeaveType, CreateLeaveTypeData } from '../../services/leaveService';
+
+interface LeaveType {
+  _id: string;
+  name: string;
+  description: string;
+  defaultDays: number;
+  isPaid: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const LeaveTypeManagement: React.FC = () => {
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingType, setEditingType] = useState<LeaveType | null>(null);
-  const [formData, setFormData] = useState<CreateLeaveTypeData>({
+  const [open, setOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<LeaveType | null>(null);
+  const [formData, setFormData] = useState({
     name: '',
     description: '',
     defaultDays: 0,
     isPaid: true,
   });
 
+  useEffect(() => {
+    fetchLeaveTypes();
+  }, []);
+
   const fetchLeaveTypes = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const data = await leaveService.getLeaveTypes();
-      setLeaveTypes(data);
-    } catch (err) {
-      setError('Failed to fetch leave types');
-      console.error('Error fetching leave types:', err);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('/api/leave/types', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized: Please login again');
+        }
+        throw new Error('Failed to fetch leave types');
+      }
+
+      const data = await response.json();
+      // Ensure data is an array
+      setLeaveTypes(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Error fetching leave types');
+      setLeaveTypes([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchLeaveTypes();
-  }, []);
-
-  const handleOpenDialog = (type?: LeaveType) => {
+  const handleOpen = (type?: LeaveType) => {
     if (type) {
-      setEditingType(type);
+      setSelectedType(type);
       setFormData({
         name: type.name,
         description: type.description,
@@ -65,7 +91,7 @@ const LeaveTypeManagement: React.FC = () => {
         isPaid: type.isPaid,
       });
     } else {
-      setEditingType(null);
+      setSelectedType(null);
       setFormData({
         name: '',
         description: '',
@@ -73,12 +99,12 @@ const LeaveTypeManagement: React.FC = () => {
         isPaid: true,
       });
     }
-    setOpenDialog(true);
+    setOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditingType(null);
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedType(null);
     setFormData({
       name: '',
       description: '',
@@ -87,23 +113,29 @@ const LeaveTypeManagement: React.FC = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      if (editingType) {
-        await leaveService.updateLeaveType(editingType._id, formData);
-      } else {
-        await leaveService.createLeaveType(formData);
+      const url = selectedType
+        ? `/api/leave/types/${selectedType._id}`
+        : '/api/leave/types';
+      const method = selectedType ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save leave type');
       }
-      handleCloseDialog();
+
+      handleClose();
       fetchLeaveTypes();
-    } catch (err) {
-      setError('Failed to save leave type');
-      console.error('Error saving leave type:', err);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      setError('Error saving leave type');
     }
   };
 
@@ -111,24 +143,27 @@ const LeaveTypeManagement: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this leave type?')) {
       return;
     }
+
     try {
-      setLoading(true);
-      setError(null);
-      await leaveService.deleteLeaveType(id);
+      const response = await fetch(`/api/leave/types/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete leave type');
+      }
+
       fetchLeaveTypes();
-    } catch (err) {
-      setError('Failed to delete leave type');
-      console.error('Error deleting leave type:', err);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      setError('Error deleting leave type');
     }
   };
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+    <Box sx={{ p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h5">Leave Types</Typography>
-        <Button variant="contained" color="primary" onClick={() => handleOpenDialog()}>
+        <Button variant="contained" color="primary" onClick={() => handleOpen()}>
           Add Leave Type
         </Button>
       </Box>
@@ -140,9 +175,7 @@ const LeaveTypeManagement: React.FC = () => {
       )}
 
       {loading ? (
-        <Box display="flex" justifyContent="center" p={3}>
-          <CircularProgress />
-        </Box>
+        <CircularProgress />
       ) : (
         <TableContainer component={Paper}>
           <Table>
@@ -151,8 +184,8 @@ const LeaveTypeManagement: React.FC = () => {
                 <TableCell>Name</TableCell>
                 <TableCell>Description</TableCell>
                 <TableCell>Default Days</TableCell>
-                <TableCell>Paid</TableCell>
-                <TableCell>Status</TableCell>
+                <TableCell>Paid Leave</TableCell>
+                <TableCell>Created At</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -163,14 +196,19 @@ const LeaveTypeManagement: React.FC = () => {
                   <TableCell>{type.description}</TableCell>
                   <TableCell>{type.defaultDays}</TableCell>
                   <TableCell>{type.isPaid ? 'Yes' : 'No'}</TableCell>
-                  <TableCell>{type.isActive ? 'Active' : 'Inactive'}</TableCell>
                   <TableCell>
-                    <IconButton onClick={() => handleOpenDialog(type)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(type._id)}>
-                      <DeleteIcon />
-                    </IconButton>
+                    {new Date(type.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleOpen(type)} sx={{ mr: 1 }}>
+                      Edit
+                    </Button>
+                    <Button
+                      color="error"
+                      onClick={() => handleDelete(type._id)}
+                    >
+                      Delete
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -179,53 +217,67 @@ const LeaveTypeManagement: React.FC = () => {
         </TableContainer>
       )}
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingType ? 'Edit Leave Type' : 'Add Leave Type'}</DialogTitle>
-        <form onSubmit={handleSubmit}>
-          <DialogContent>
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {selectedType ? 'Edit Leave Type' : 'Add Leave Type'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
             <TextField
               fullWidth
               label="Name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              margin="normal"
-              required
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              sx={{ mb: 2 }}
             />
             <TextField
               fullWidth
               label="Description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              margin="normal"
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               multiline
               rows={3}
+              sx={{ mb: 2 }}
             />
             <TextField
               fullWidth
               label="Default Days"
               type="number"
               value={formData.defaultDays}
-              onChange={(e) => setFormData({ ...formData, defaultDays: Number(e.target.value) })}
-              margin="normal"
-              required
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  defaultDays: parseInt(e.target.value),
+                })
+              }
+              sx={{ mb: 2 }}
             />
             <FormControlLabel
               control={
                 <Switch
                   checked={formData.isPaid}
-                  onChange={(e) => setFormData({ ...formData, isPaid: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      isPaid: e.target.checked,
+                    })
+                  }
                 />
               }
               label="Paid Leave"
             />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button type="submit" variant="contained" color="primary" disabled={loading}>
-              {editingType ? 'Update' : 'Create'}
-            </Button>
-          </DialogActions>
-        </form>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            Save
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );
