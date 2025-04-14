@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { AuthState } from '../store/slices/authSlice';
 import LeaveTypeManagement from '../components/leave/LeaveTypeManagement';
+import LeaveApplications from '../components/leave/LeaveApplications';
 
 const LeaveManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -30,22 +31,13 @@ const LeaveManagement: React.FC = () => {
 
           <Paper sx={{ p: 2 }}>
             {activeTab === 0 && <LeaveTypeManagement />}
-            {activeTab === 1 && <Typography>Leave Applications (Coming Soon)</Typography>}
+            {activeTab === 1 && <LeaveApplications />}
             {activeTab === 2 && <Typography>Leave Balance (Coming Soon)</Typography>}
           </Paper>
         </>
       ) : (
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            My Leave Applications
-          </Typography>
-          <Typography paragraph>
-            You can apply for leave and view your leave history here.
-          </Typography>
-          {/* Placeholder for employee leave application form and history */}
-          <Typography color="text.secondary">
-            Leave application form and history will be implemented here.
-          </Typography>
+          <LeaveApplications />
         </Paper>
       )}
     </Box>
