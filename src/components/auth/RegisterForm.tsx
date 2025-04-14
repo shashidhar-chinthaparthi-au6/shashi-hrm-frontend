@@ -142,9 +142,11 @@ const RegisterForm = () => {
             onChange={handleChange}
             required
           >
-            <MenuItem value="employee">Employee</MenuItem>
-            <MenuItem value="manager">Manager</MenuItem>
-            <MenuItem value="admin">Admin</MenuItem>
+            <MenuItem value="EMPLOYEE">Employee</MenuItem>
+            <MenuItem value="ADMIN">Admin</MenuItem>
+            <MenuItem value="HR_MANAGER">HR Manager</MenuItem>
+            <MenuItem value="DEPARTMENT_MANAGER">Department Manager</MenuItem>
+            <MenuItem value="SUPER_ADMIN">Super Admin</MenuItem>
           </FormInput>
 
           <Button
