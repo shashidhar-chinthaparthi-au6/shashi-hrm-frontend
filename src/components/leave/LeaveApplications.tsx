@@ -26,6 +26,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { leaveService, LeaveApplication, LeaveType } from '../../services/leaveService';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { AuthState } from '../../store/slices/authSlice';
 
 interface LeaveApplicationForm {
   leaveTypeId: string;
@@ -40,12 +43,18 @@ const LeaveApplications: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState<LeaveApplication | null>(null);
+  const [reviewComment, setReviewComment] = useState('');
   const [formData, setFormData] = useState<LeaveApplicationForm>({
     leaveTypeId: '',
     startDate: null,
     endDate: null,
     reason: '',
   });
+
+  const { user } = useSelector((state: RootState) => state.auth as AuthState);
+  const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(user?.role || '');
 
   const fetchData = async () => {
     try {
@@ -116,6 +125,39 @@ const LeaveApplications: React.FC = () => {
     }
   };
 
+  const handleReviewClick = (application: LeaveApplication) => {
+    setSelectedApplication(application);
+    setReviewDialogOpen(true);
+  };
+
+  const handleApprove = async () => {
+    if (!selectedApplication) return;
+
+    try {
+      await leaveService.updateLeaveStatus(selectedApplication._id, 'approved', reviewComment);
+      fetchData();
+      setReviewDialogOpen(false);
+      setSelectedApplication(null);
+      setReviewComment('');
+    } catch (err) {
+      setError('Error approving leave request');
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedApplication) return;
+
+    try {
+      await leaveService.updateLeaveStatus(selectedApplication._id, 'rejected', reviewComment);
+      fetchData();
+      setReviewDialogOpen(false);
+      setSelectedApplication(null);
+      setReviewComment('');
+    } catch (err) {
+      setError('Error rejecting leave request');
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" p={3}>
@@ -133,7 +175,7 @@ const LeaveApplications: React.FC = () => {
       )}
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">My Leave Applications</Typography>
+        <Typography variant="h6">{isAdmin ? 'Leave Applications' : 'My Leave Applications'}</Typography>
         <Button variant="contained" color="primary" onClick={handleOpenDialog}>
           Apply for Leave
         </Button>
@@ -143,16 +185,23 @@ const LeaveApplications: React.FC = () => {
         <Table>
           <TableHead>
             <TableRow>
+              {isAdmin && <TableCell>Employee</TableCell>}
               <TableCell>Leave Type</TableCell>
               <TableCell>Start Date</TableCell>
               <TableCell>End Date</TableCell>
               <TableCell>Reason</TableCell>
               <TableCell>Status</TableCell>
+              {isAdmin && <TableCell>Actions</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {applications.map((app) => (
               <TableRow key={app._id}>
+                {isAdmin && (
+                  <TableCell>
+                    {app.employee.firstName} {app.employee.lastName}
+                  </TableCell>
+                )}
                 <TableCell>{app.leaveType.name}</TableCell>
                 <TableCell>{new Date(app.startDate).toLocaleDateString()}</TableCell>
                 <TableCell>{new Date(app.endDate).toLocaleDateString()}</TableCell>
@@ -162,6 +211,19 @@ const LeaveApplications: React.FC = () => {
                     {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
                   </Typography>
                 </TableCell>
+                {isAdmin && (
+                  <TableCell>
+                    {app.status === 'pending' && (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleReviewClick(app)}
+                      >
+                        Review
+                      </Button>
+                    )}
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -213,6 +275,47 @@ const LeaveApplications: React.FC = () => {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleSubmit} variant="contained" color="primary">
             Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={reviewDialogOpen} onClose={() => setReviewDialogOpen(false)}>
+        <DialogTitle>Review Leave Request</DialogTitle>
+        <DialogContent>
+          {selectedApplication && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Employee: {selectedApplication.employee.firstName} {selectedApplication.employee.lastName}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                Leave Type: {selectedApplication.leaveType.name}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                Period: {new Date(selectedApplication.startDate).toLocaleDateString()} -{' '}
+                {new Date(selectedApplication.endDate).toLocaleDateString()}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                Reason: {selectedApplication.reason}
+              </Typography>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                label="Review Comment"
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                sx={{ mt: 2 }}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReviewDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleReject} color="error">
+            Reject
+          </Button>
+          <Button onClick={handleApprove} color="success">
+            Approve
           </Button>
         </DialogActions>
       </Dialog>
