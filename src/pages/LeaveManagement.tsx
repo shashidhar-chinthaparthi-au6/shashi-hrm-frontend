@@ -5,6 +5,7 @@ import { RootState } from '../store';
 import { AuthState } from '../store/slices/authSlice';
 import LeaveTypeManagement from '../components/leave/LeaveTypeManagement';
 import LeaveApplications from '../components/leave/LeaveApplications';
+import LeaveBalance from '../components/leave/LeaveBalance';
 
 const LeaveManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -32,7 +33,7 @@ const LeaveManagement: React.FC = () => {
           <Paper sx={{ p: 2 }}>
             {activeTab === 0 && <LeaveTypeManagement />}
             {activeTab === 1 && <LeaveApplications />}
-            {activeTab === 2 && <Typography>Leave Balance (Coming Soon)</Typography>}
+            {activeTab === 2 && <LeaveBalance />}
           </Paper>
         </>
       ) : (

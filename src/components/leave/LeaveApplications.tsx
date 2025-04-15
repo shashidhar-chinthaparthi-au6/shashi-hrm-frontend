@@ -99,7 +99,14 @@ const LeaveApplications: React.FC = () => {
         return;
       }
 
-      await leaveService.applyForLeave({
+      console.log('Submitting leave application with data:', {
+        leaveTypeId: formData.leaveTypeId,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        reason: formData.reason,
+      });
+
+      const response = await leaveService.applyForLeave({
         leaveTypeId: formData.leaveTypeId,
         startDate: formData.startDate,
         endDate: formData.endDate,
@@ -108,9 +115,19 @@ const LeaveApplications: React.FC = () => {
 
       handleCloseDialog();
       fetchData();
-    } catch (err) {
-      setError('Failed to apply for leave');
-      console.error('Error applying for leave:', err);
+    } catch (err: any) {
+      console.error('Error details:', err);
+      if (err.response?.data?.message) {
+        if (err.response.data.message === 'Overlapping leave application exists') {
+          const existingStart = new Date(err.response.data.details.existingStartDate).toLocaleDateString();
+          const existingEnd = new Date(err.response.data.details.existingEndDate).toLocaleDateString();
+          setError(`Cannot apply for leave: You already have an approved leave from ${existingStart} to ${existingEnd}. Please choose different dates.`);
+        } else {
+          setError(`Failed to apply for leave: ${err.response.data.message}`);
+        }
+      } else {
+        setError('Failed to apply for leave. Please try again.');
+      }
     }
   };
 
