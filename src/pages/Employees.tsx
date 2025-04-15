@@ -71,6 +71,7 @@ const initialFormData: EmployeeFormData = {
 const Employees = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { employees, loading, error } = useSelector((state: RootState) => state.employees);
+  const { user } = useSelector((state: RootState) => state.auth);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
   const [editMode, setEditMode] = useState(false);
@@ -219,6 +220,22 @@ const Employees = () => {
       loadEmployeeDetails(selectedEmployeeDetails._id);
     } catch (error) {
       dispatch(showToast({ message: 'Failed to delete document', severity: 'error' }));
+    }
+  };
+
+  // Get available roles based on current user's role
+  const getAvailableRoles = () => {
+    if (!user) return ['EMPLOYEE'];
+    
+    switch (user.role) {
+      case 'SUPER_ADMIN':
+        return ['ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE'];
+      case 'ADMIN':
+        return ['HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE'];
+      case 'HR_MANAGER':
+        return ['EMPLOYEE'];
+      default:
+        return ['EMPLOYEE'];
     }
   };
 
@@ -410,11 +427,11 @@ const Employees = () => {
                 onChange={handleChange}
                 label="Role"
               >
-                <MenuItem value="SUPER_ADMIN">Super Admin</MenuItem>
-                <MenuItem value="ADMIN">Admin</MenuItem>
-                <MenuItem value="HR_MANAGER">HR Manager</MenuItem>
-                <MenuItem value="DEPARTMENT_MANAGER">Department Manager</MenuItem>
-                <MenuItem value="EMPLOYEE">Employee</MenuItem>
+                {getAvailableRoles().map((role) => (
+                  <MenuItem key={role} value={role}>
+                    {role.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ')}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             <TextField

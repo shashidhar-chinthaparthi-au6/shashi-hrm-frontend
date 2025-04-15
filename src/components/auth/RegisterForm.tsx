@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import FormInput from '../common/FormInput';
 import { register } from '../../store/slices/authSlice';
-import { AppDispatch } from '../../store';
+import { AppDispatch, RootState } from '../../store';
 import { UserRole } from '../../types/auth';
 
 const departments = [
@@ -29,6 +29,7 @@ const departments = [
 const RegisterForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -38,6 +39,23 @@ const RegisterForm = () => {
     role: 'employee' as UserRole,
   });
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Get available roles based on current user's role
+  const getAvailableRoles = () => {
+    if (!user) return ['employee'];
+    
+    switch (user.role) {
+      case 'SUPER_ADMIN':
+        return ['admin', 'hr_manager', 'department_manager', 'employee'];
+      case 'ADMIN':
+        return ['hr_manager', 'department_manager', 'employee'];
+      case 'HR_MANAGER':
+        return ['employee'];
+      default:
+        return ['employee'];
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -47,12 +65,15 @@ const RegisterForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     try {
       await dispatch(register(formData)).unwrap();
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err);
+      setError(err.message || 'Registration failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -142,11 +163,11 @@ const RegisterForm = () => {
             onChange={handleChange}
             required
           >
-            <MenuItem value="EMPLOYEE">Employee</MenuItem>
-            <MenuItem value="ADMIN">Admin</MenuItem>
-            <MenuItem value="HR_MANAGER">HR Manager</MenuItem>
-            <MenuItem value="DEPARTMENT_MANAGER">Department Manager</MenuItem>
-            <MenuItem value="SUPER_ADMIN">Super Admin</MenuItem>
+            {getAvailableRoles().map((role) => (
+              <MenuItem key={role} value={role}>
+                {role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ')}
+              </MenuItem>
+            ))}
           </FormInput>
 
           <Button
@@ -156,8 +177,9 @@ const RegisterForm = () => {
             fullWidth
             size="large"
             sx={{ mt: 3 }}
+            disabled={isLoading}
           >
-            Register
+            {isLoading ? <CircularProgress size={24} /> : 'Register'}
           </Button>
         </form>
       </Paper>
