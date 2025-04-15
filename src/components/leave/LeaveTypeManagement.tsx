@@ -115,6 +115,11 @@ const LeaveTypeManagement: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
       const url = selectedType
         ? `/api/leave/types/${selectedType._id}`
         : '/api/leave/types';
@@ -123,6 +128,7 @@ const LeaveTypeManagement: React.FC = () => {
       const response = await fetch(url, {
         method,
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
