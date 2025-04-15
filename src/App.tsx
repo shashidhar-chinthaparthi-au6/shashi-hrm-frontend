@@ -11,6 +11,9 @@ import Employees from './pages/Employees';
 import Attendance from './pages/Attendance';
 import ToastNotification from './components/common/ToastNotification';
 import LeaveManagement from './pages/LeaveManagement';
+import Payroll from './pages/Payroll';
+import Performance from './pages/Performance';
+import Settings from './pages/Settings';
 import Unauthorized from './pages/Unauthorized';
 
 // Create a theme instance
@@ -80,6 +83,36 @@ function App() {
                 <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'EMPLOYEE']}>
                   <DashboardLayout>
                     <LeaveManagement />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payroll"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER']}>
+                  <DashboardLayout>
+                    <Payroll />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/performance"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE']}>
+                  <DashboardLayout>
+                    <Performance />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+                  <DashboardLayout>
+                    <Settings />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
