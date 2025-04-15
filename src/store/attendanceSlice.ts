@@ -70,6 +70,20 @@ export const updateAttendanceSettings = createAsyncThunk(
   }
 );
 
+export const markAttendance = createAsyncThunk(
+  'attendance/mark',
+  async (data: { employeeId: string; date: string; checkIn: string; checkOut: string; status: string; notes: string }, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await attendanceService.markAttendance(data);
+      dispatch(showToast({ message: 'Attendance marked successfully', severity: 'success' }));
+      return response;
+    } catch (error: any) {
+      dispatch(showToast({ message: error.response?.data?.message || 'Failed to mark attendance', severity: 'error' }));
+      return rejectWithValue(error.response?.data?.message || 'Failed to mark attendance');
+    }
+  }
+);
+
 const attendanceSlice = createSlice({
   name: 'attendance',
   initialState,
@@ -129,6 +143,19 @@ const attendanceSlice = createSlice({
         state.settings = action.payload;
       })
       .addCase(updateAttendanceSettings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Mark Attendance
+      .addCase(markAttendance.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(markAttendance.fulfilled, (state, action) => {
+        state.loading = false;
+        state.records = [...state.records, action.payload];
+      })
+      .addCase(markAttendance.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

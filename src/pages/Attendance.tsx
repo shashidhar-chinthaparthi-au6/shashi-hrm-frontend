@@ -41,21 +41,31 @@ import {
   updateAttendanceRecord,
   fetchAttendanceSettings,
   updateAttendanceSettings,
+  markAttendance,
 } from '../store/attendanceSlice';
 import { attendanceService } from '../services/attendance.service';
 
 const Attendance = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { records, settings, loading, error } = useSelector((state: RootState) => state.attendance);
+  const { user } = useSelector((state: RootState) => state.auth);
   
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [markAttendanceDialogOpen, setMarkAttendanceDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [currentTab, setCurrentTab] = useState(0);
   const [reportStartDate, setReportStartDate] = useState<Date | null>(new Date());
   const [reportEndDate, setReportEndDate] = useState<Date | null>(new Date());
   const [localSettings, setLocalSettings] = useState(settings);
+  const [attendanceData, setAttendanceData] = useState({
+    date: format(new Date(), 'yyyy-MM-dd'),
+    checkIn: format(new Date(), 'HH:mm'),
+    checkOut: '',
+    status: 'present',
+    notes: '',
+  });
 
   useEffect(() => {
     if (selectedDate) {
@@ -124,6 +134,27 @@ const Attendance = () => {
     setCurrentTab(newValue);
   };
 
+  const handleMarkAttendance = async () => {
+    if (!user?.id) {
+      console.error('User ID is required');
+      return;
+    }
+
+    try {
+      await dispatch(markAttendance({
+        ...attendanceData,
+        employeeId: user.id,
+      }));
+      setMarkAttendanceDialogOpen(false);
+      // Refresh the attendance records
+      if (selectedDate) {
+        dispatch(fetchDailyAttendance(format(selectedDate, 'yyyy-MM-dd')));
+      }
+    } catch (error) {
+      console.error('Error marking attendance:', error);
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -145,6 +176,14 @@ const Attendance = () => {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Attendance Management</Typography>
         <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setMarkAttendanceDialogOpen(true)}
+            sx={{ mr: 2 }}
+          >
+            Mark Attendance
+          </Button>
           <IconButton onClick={() => setSettingsDialogOpen(true)} title="Attendance Settings">
             <SettingsIcon />
           </IconButton>
@@ -155,6 +194,66 @@ const Attendance = () => {
         <Tab label="Daily Attendance" />
         <Tab label="Reports" />
       </Tabs>
+
+      {/* Mark Attendance Dialog */}
+      <Dialog open={markAttendanceDialogOpen} onClose={() => setMarkAttendanceDialogOpen(false)}>
+        <DialogTitle>Mark Attendance</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'grid', gap: 2 }}>
+            <TextField
+              type="date"
+              label="Date"
+              value={attendanceData.date}
+              onChange={(e) => setAttendanceData({ ...attendanceData, date: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <TextField
+              type="time"
+              label="Check In"
+              value={attendanceData.checkIn}
+              onChange={(e) => setAttendanceData({ ...attendanceData, checkIn: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <TextField
+              type="time"
+              label="Check Out"
+              value={attendanceData.checkOut}
+              onChange={(e) => setAttendanceData({ ...attendanceData, checkOut: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={attendanceData.status}
+                label="Status"
+                onChange={(e) => setAttendanceData({ ...attendanceData, status: e.target.value })}
+              >
+                <MenuItem value="present">Present</MenuItem>
+                <MenuItem value="late">Late</MenuItem>
+                <MenuItem value="half_day">Half Day</MenuItem>
+                <MenuItem value="on_leave">On Leave</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Notes"
+              multiline
+              rows={3}
+              value={attendanceData.notes}
+              onChange={(e) => setAttendanceData({ ...attendanceData, notes: e.target.value })}
+              fullWidth
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMarkAttendanceDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleMarkAttendance} variant="contained" color="primary">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {currentTab === 0 ? (
         <Box>

@@ -21,6 +21,12 @@ export interface AttendanceSettings {
 }
 
 export const attendanceService = {
+  // Mark attendance for an employee
+  markAttendance: async (data: { employeeId: string; date: string; checkIn: string; checkOut: string; status: string; notes: string }) => {
+    const response = await api.post('/attendance', data);
+    return response.data;
+  },
+
   // Get attendance records for a specific date
   getDailyAttendance: async (date: string) => {
     const response = await api.get(`/attendance/daily/${date}`);
